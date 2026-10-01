@@ -1,9 +1,11 @@
 package com.omnistream.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.omnistream.app.feature.home.HomeScreen
 import com.omnistream.app.feature.player.PlayerScreen
 
@@ -21,8 +23,12 @@ fun OmniStreamNavGraph() {
                 navController.navigate("player/$mediaId")
             })
         }
-        composable(Routes.PLAYER) {
-            PlayerScreen(onBackClick = { navController.popBackStack() })
+        composable(
+            route = Routes.PLAYER,
+            arguments = listOf(navArgument("mediaId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val mediaId = backStackEntry.arguments?.getString("mediaId") ?: "bbb"
+            PlayerScreen(mediaId = mediaId, onBackClick = { navController.popBackStack() })
         }
     }
 }
