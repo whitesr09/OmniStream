@@ -142,7 +142,7 @@ def main():
     edit(root/"app/build.gradle.kts", lambda s: replace_exact(s,
          'applicationId = "com.lagradost.cloudstream3"', 'applicationId = "com.nshd.zstream"', "application ID"))
     edit(root/"gradle/libs.versions.toml", lambda s: replace_exact(s,
-         'versionName = "4.8.0"', 'versionName = "4.8.0-zstream.1"', "version name"))
+         'versionName = "4.7.0"', 'versionName = "4.8.0-zstream.1"', "version name"))
     def light_default(s):
         old = 'settingsManager.getString(act.getString(R.string.app_theme_key), "AmoledLight")'
         new = 'settingsManager.getString(act.getString(R.string.app_theme_key), "Light")'
