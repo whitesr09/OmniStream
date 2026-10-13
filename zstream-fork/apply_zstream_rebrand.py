@@ -175,13 +175,15 @@ def main():
     edit(root/"app/src/main/res/xml/settings_general.xml", lambda s: replace_exact(
          s, UPSTREAM_URL, FORK_URL, "settings repository links", expected=2))
     def banner(s):
-        title = "# Z-Stream — unofficial CloudStream fork\\n\\n"
-        if title in s: return s
-        intro = ("# Z-Stream — unofficial CloudStream fork\\n\\n> Maintainer: **N S H D**. Derived from the original "
-                 f"[CloudStream project]({UPSTREAM_URL}). Original authors, contributor credits, copyright notices "
-                 "and the GPL-3.0 license are retained. This fork is not affiliated with or endorsed by reCloudStream.\\n\\n"
-                 "---\\n\\n## Upstream CloudStream documentation\\n")
-        return replace_exact(s, "# CloudStream\\n", intro, "README fork banner")
+        title = "# Z-Stream — unofficial CloudStream fork" + chr(10) * 2
+        if s.startswith(title): return s
+        intro = (title + "> Maintainer: **N S H D**. Derived from the original "
+                 + f"[CloudStream project]({UPSTREAM_URL}). Original authors, contributor credits, copyright notices "
+                 + "and the GPL-3.0 license are retained. This fork is not affiliated with or endorsed by reCloudStream."
+                 + chr(10) * 2 + "---" + chr(10) * 2 + "## Upstream CloudStream documentation" + chr(10))
+        m = re.search(r"(?m)^# CloudStream[ \\t]*$", s)
+        if not m: raise ValueError("README fork banner: upstream heading not found")
+        return s[:m.start()] + intro + s[m.end():].lstrip("\\r\\n")
     edit(root/"README.md", banner)
     (root/"ZSTREAM-FORK-NOTICE.md").write_text(f"""# Z-Stream fork and license notice
 
