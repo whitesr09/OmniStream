@@ -1,0 +1,87 @@
+name: Build Z-Stream APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "zstream-fork/**"
+      - ".github/workflows/build-zstream.yml"
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+env:
+  SOURCE_COMMIT: 8bdc5999968265d74dae8ddff3656950be255edc
+
+jobs:
+  build-zstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out fork configuration
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses >/dev/null || true
+
+      - name: Check out exact CloudStream source revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/recloudstream/cloudstream.git "$RUNNER_TEMP/cloudstream-src"
+          git -C "$RUNNER_TEMP/cloudstream-src" checkout --detach "$SOURCE_COMMIT"
+          echo "SOURCE_ACTUAL=$(git -C "$RUNNER_TEMP/cloudstream-src" rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Install icon generator dependency
+        run: python3 -m pip install --disable-pip-version-check pillow
+
+      - name: Apply Z-Stream rebrand
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 zstream-fork/apply_zstream_rebrand.py "$RUNNER_TEMP/cloudstream-src"
+          cp zstream-fork/ZSTREAM-FORK-NOTICE.md "$RUNNER_TEMP/cloudstream-src/ZSTREAM-FORK-NOTICE.md"
+
+      - name: Assemble Z-Stream debug APK
+        shell: bash
+        working-directory: ${{ runner.temp }}/cloudstream-src
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Verify and package APK plus corresponding source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$RUNNER_TEMP/cloudstream-src"
+          APK="$SRC/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          mkdir -p dist
+          cp "$APK" "dist/Z-Stream-4.8.0-zstream.1-debug.apk"
+          git -C "$SRC" add -A
+          git -C "$SRC" diff --cached --binary HEAD > dist/Z-Stream-source.patch
+          test -s dist/Z-Stream-source.patch
+          sha256sum dist/Z-Stream-4.8.0-zstream.1-debug.apk | tee dist/SHA256SUMS.txt
+          printf 'Source commit: %s\n' "$SOURCE_ACTUAL" > dist/BUILD-INFO.txt
+          printf 'Application ID: com.nshd.zstream\nVersion: 4.8.0-zstream.1\nMaintainer credit: N S H D\nLicense: GPL-3.0\n' >> dist/BUILD-INFO.txt
+
+      - name: Upload Z-Stream APK and GPL source patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: Z-Stream-APK
+          path: |
+            dist/Z-Stream-4.8.0-zstream.1-debug.apk
+            dist/Z-Stream-source.patch
+            dist/SHA256SUMS.txt
+            dist/BUILD-INFO.txt
+          if-no-files-found: error
+          retention-days: 14
