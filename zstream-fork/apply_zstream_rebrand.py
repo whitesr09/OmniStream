@@ -146,7 +146,7 @@ def main():
     def light_default(s):
         old = 'settingsManager.getString(act.getString(R.string.app_theme_key), "AmoledLight")'
         new = 'settingsManager.getString(act.getString(R.string.app_theme_key), "Light")'
-        if old in s: return replace_exact(s, old, new, "first-run light theme", expected=2)
+        if old in s: return replace_exact(s, old, new, "first-run light theme", expected=1)
         if s.count(new) >= 2: return s
         raise ValueError("theme fallback expressions not found")
     edit(root/"app/src/main/java/com/lagradost/cloudstream3/CommonActivity.kt", light_default)
