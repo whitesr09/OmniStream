@@ -160,7 +160,7 @@ def main():
           ("lightGrayTextColor","#5f6267","#5B6B84"),("lightIconColor","#5f6267","#2E5FA8")]:
             s = replace_color(s, name, old, new)
         if "zstream_splash_bg" not in s:
-            s = s.replace("</resources>", '    <color name="zstream_splash_bg">#07182F</color>\\n</resources>')
+            s = s.replace("</resources>", '    <color name="zstream_splash_bg">#07182F</color>' + chr(10) + "</resources>")
         return s
     edit(root/"app/src/main/res/values/colors.xml", palette)
     def updater(s):
@@ -181,9 +181,9 @@ def main():
                  + f"[CloudStream project]({UPSTREAM_URL}). Original authors, contributor credits, copyright notices "
                  + "and the GPL-3.0 license are retained. This fork is not affiliated with or endorsed by reCloudStream."
                  + chr(10) * 2 + "---" + chr(10) * 2 + "## Upstream CloudStream documentation" + chr(10))
-        m = re.search(r"(?m)^# CloudStream[ \\t]*$", s)
+        m = re.search(r"(?m)^# CloudStream[ \\x09]*$", s)
         if not m: raise ValueError("README fork banner: upstream heading not found")
-        return s[:m.start()] + intro + s[m.end():].lstrip("\\r\\n")
+        return s[:m.start()] + intro + s[m.end():].lstrip(chr(13) + chr(10))
     edit(root/"README.md", banner)
     (root/"ZSTREAM-FORK-NOTICE.md").write_text(f"""# Z-Stream fork and license notice
 
