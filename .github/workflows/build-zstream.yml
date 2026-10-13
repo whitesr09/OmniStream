@@ -67,7 +67,13 @@ jobs:
         run: |
           set -euo pipefail
           SRC="$RUNNER_TEMP/cloudstream-src"
-          APK="$SRC/app/build/outputs/apk/debug/app-debug.apk"
+          # CloudStream defines product flavors, so assembleDebug emits flavor-specific APKs
+          # (for example app-stable-debug.apk), not app-debug.apk.
+          APK="$(find "$SRC/app/build/outputs/apk" -type f -name "*.apk" -path "*/stable/debug/*" -print -quit)"
+          if [ -z "$APK" ]; then
+            APK="$(find "$SRC/app/build/outputs/apk" -type f -name "*.apk" -print -quit)"
+          fi
+          test -n "$APK"
           test -s "$APK"
           mkdir -p dist
           cp "$APK" "dist/Z-Stream-4.8.0-zstream.1-debug.apk"
