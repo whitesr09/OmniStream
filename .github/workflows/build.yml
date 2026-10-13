@@ -3,6 +3,9 @@ name: Build OmniStream APK
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - "zstream-fork/**"
+      - ".github/workflows/build-zstream.yml"
   workflow_dispatch:
 
 permissions:
